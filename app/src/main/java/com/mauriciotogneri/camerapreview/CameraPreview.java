@@ -7,7 +7,6 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
-import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -17,7 +16,6 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class CameraPreview extends RelativeLayout implements PreviewCallback, SurfaceHolder.Callback
@@ -194,14 +192,14 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
         long start = System.currentTimeMillis();
 
         Camera.Parameters parameters = camera.getParameters();
-        Camera.Size previewSize = parameters.getPreviewSize();
-        Bitmap bitmap = bitmap(data, previewSize.width, previewSize.height);
+        //Camera.Size previewSize = parameters.getPreviewSize();
+        //Bitmap bitmap = bitmap(data, previewSize.width, previewSize.height);
 
-        //Bitmap bitmap = bitmap(data, camera.getParameters());
+        Bitmap bitmap = bitmap(data, camera.getParameters());
 
         Log.i("TEST", "TIME: " + (System.currentTimeMillis() - start));
 
-        try
+        /*try
         {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
@@ -221,13 +219,14 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
         catch (Exception e)
         {
             e.printStackTrace();
-        }
+        }*/
     }
 
     private Bitmap bitmap(byte[] data, Camera.Parameters parameters)
     {
-        int width = parameters.getPreviewSize().width;
-        int height = parameters.getPreviewSize().height;
+        Camera.Size previewSize = parameters.getPreviewSize();
+        int width = previewSize.width;
+        int height = previewSize.height;
 
         YuvImage yuv = new YuvImage(data, parameters.getPreviewFormat(), width, height, null);
 
