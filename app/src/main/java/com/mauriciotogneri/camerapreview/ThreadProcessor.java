@@ -18,13 +18,12 @@ public class ThreadProcessor extends Thread
     private byte[] inputData = null;
     private int inputWidth = -1;
     private int inputHeight = -1;
-    private int inputFormat = -1;
 
     public ThreadProcessor()
     {
     }
 
-    public void request(byte[] data, int width, int height, int format)
+    public void request(byte[] data, int width, int height)
     {
         if (running)
         {
@@ -35,7 +34,6 @@ public class ThreadProcessor extends Thread
                     inputData = data;
                     inputWidth = width;
                     inputHeight = height;
-                    inputFormat = format;
 
                     lock.notify();
                 }
@@ -77,18 +75,17 @@ public class ThreadProcessor extends Thread
             {
                 if ((inputData != null) && (inputWidth != -1) && (inputHeight != -1))
                 {
-                    process(inputData, inputWidth, inputHeight, inputFormat);
+                    process(inputData, inputWidth, inputHeight);
                 }
 
                 inputData = null;
                 inputWidth = -1;
                 inputHeight = -1;
-                inputFormat = -1;
             }
         }
     }
 
-    private void process(byte[] data, int width, int height, int format)
+    private void process(byte[] data, int width, int height)
     {
         long start = System.currentTimeMillis();
 

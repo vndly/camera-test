@@ -40,10 +40,9 @@ public class MainActivity extends Activity implements PreviewCallback, PreviewRe
     @Override
     public void onPreviewFrame(byte[] data, Camera camera)
     {
-        Camera.Parameters parameters = camera.getParameters();
-        Camera.Size previewSize = parameters.getPreviewSize();
+        Camera.Size previewSize = camera.getParameters().getPreviewSize();
 
-        threadProcessor.request(data, previewSize.width, previewSize.height, parameters.getPreviewFormat());
+        threadProcessor.request(data, previewSize.width, previewSize.height);
     }
 
     @Override
