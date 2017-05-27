@@ -1,29 +1,25 @@
 package com.mauriciotogneri.camerapreview;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Rect;
-import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class CameraPreview extends RelativeLayout implements PreviewCallback, SurfaceHolder.Callback
+public class CameraPreview extends RelativeLayout implements SurfaceHolder.Callback
 {
     private Camera camera;
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
-    private Rect surfaceSize = null;
+    private Rect surfaceSize;
+    private PreviewReady previewReady;
 
     public CameraPreview(Context context)
     {
@@ -53,6 +49,19 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+    }
+
+    public void previewReady(PreviewReady callback)
+    {
+        previewReady = callback;
+    }
+
+    public void previewCallback(PreviewCallback callback)
+    {
+        if (camera != null)
+        {
+            camera.setPreviewCallback(callback);
+        }
     }
 
     public void resume() throws IOException
@@ -95,15 +104,16 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
 
         if (!layoutSizeChanged)
         {
-            if (previewSize != null)
-            {
-                cameraParameters.setPreviewSize(previewSize.width, previewSize.height);
-            }
+            cameraParameters.setPreviewSize(previewSize.width, previewSize.height);
 
             camera.setPreviewDisplay(surfaceHolder);
-            camera.setPreviewCallback(this);
             camera.setParameters(cameraParameters);
             camera.startPreview();
+
+            if (previewReady != null)
+            {
+                previewReady.onPreviewReady();
+            }
         }
     }
 
@@ -185,81 +195,6 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
     }
 
     @Override
-    public void onPreviewFrame(byte[] data, Camera camera)
-    {
-        long start = System.currentTimeMillis();
-
-        //Camera.Size previewSize = parameters.getPreviewSize();
-        //Bitmap bitmap = bitmap(data, previewSize.width, previewSize.height);
-
-        Bitmap bitmap = bitmap(data, camera.getParameters());
-
-        Log.i("TEST", "TIME: " + (System.currentTimeMillis() - start));
-
-        /*try
-        {
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-
-            FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/file.bmp");
-            fos.write(byteArray);
-            fos.close();
-
-            count++;
-
-            if (count > 3)
-            {
-                System.exit(0);
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }*/
-    }
-
-    private Bitmap bitmap(byte[] data, Camera.Parameters parameters)
-    {
-        Camera.Size previewSize = parameters.getPreviewSize();
-        int width = previewSize.width;
-        int height = previewSize.height;
-
-        YuvImage yuv = new YuvImage(data, parameters.getPreviewFormat(), width, height, null);
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        yuv.compressToJpeg(new Rect(0, 0, width, height), 100, out);
-
-        byte[] bytes = out.toByteArray();
-
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-    }
-
-    private Bitmap bitmap(byte[] data, int width, int height)
-    {
-        int[] pixels = new int[width * height];
-        int inputOffset = 0;
-
-        for (int y = 0; y < height; y++)
-        {
-            int outputOffset = y * width;
-
-            for (int x = 0; x < width; x++)
-            {
-                int grey = data[inputOffset + x] & 0xff;
-                pixels[outputOffset + x] = 0xFF000000 | (grey * 0x00010101);
-            }
-
-            inputOffset += width;
-        }
-
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
-
-        return bitmap;
-    }
-
-    @Override
     public void surfaceCreated(SurfaceHolder holder)
     {
     }
@@ -284,5 +219,10 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
     {
         stopCamera();
         surfaceSize = null;
+    }
+
+    public interface PreviewReady
+    {
+        void onPreviewReady();
     }
 }
