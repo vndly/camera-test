@@ -1,28 +1,32 @@
 package com.mauriciotogneri.camerapreview;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.WindowManager;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.List;
 
-public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
+public class CameraPreview extends RelativeLayout implements PreviewCallback, SurfaceHolder.Callback
 {
     private static boolean DEBUGGING = true;
     private static final String LOG_TAG = "CameraPreviewSample";
     private static final String CAMERA_PARAM_ORIENTATION = "orientation";
     private static final String CAMERA_PARAM_LANDSCAPE = "landscape";
     private static final String CAMERA_PARAM_PORTRAIT = "portrait";
-    protected Activity mActivity;
+    protected Context mActivity;
+    private SurfaceView surfaceView;
     private SurfaceHolder mHolder;
     protected Camera mCamera;
     protected List<Camera.Size> mPreviewSizeList;
@@ -50,20 +54,42 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         void onPreviewReady();
     }
 
-    public CameraPreview(Activity activity, int cameraId, LayoutMode mode)
+    public CameraPreview(Context context)
     {
-        super(activity);
+        super(context);
+        init(context);
+    }
 
-        mActivity = activity;
-        mLayoutMode = mode;
-        mHolder = getHolder();
+    public CameraPreview(Context context, AttributeSet attrs)
+    {
+        super(context, attrs);
+        init(context);
+    }
+
+    public CameraPreview(Context context, AttributeSet attrs, int defStyleAttr)
+    {
+        super(context, attrs, defStyleAttr);
+        init(context);
+    }
+
+    private void init(Context context)
+    {
+        setGravity(Gravity.CENTER);
+
+        surfaceView = new SurfaceView(context);
+
+        mActivity = context;
+        mLayoutMode = LayoutMode.FitToParent;
+        mHolder = surfaceView.getHolder();
         mHolder.addCallback(this);
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        mCamera = Camera.open(cameraId);
+        mCamera = Camera.open();
 
         Camera.Parameters cameraParams = mCamera.getParameters();
         mPreviewSizeList = cameraParams.getSupportedPreviewSizes();
         mPictureSizeList = cameraParams.getSupportedPictureSizes();
+
+        addView(surfaceView);
     }
 
     @Override
@@ -86,6 +112,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mSurfaceChangedCallDepth++;
         doSurfaceChanged(width, height);
         mSurfaceChangedCallDepth--;
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder)
+    {
+        stop();
+    }
+
+    @Override
+    public void onPreviewFrame(byte[] data, Camera camera)
+    {
+        Log.i("TEST", "DATA: " + data.length);
     }
 
     private void doSurfaceChanged(int width, int height)
@@ -147,7 +185,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
         }
 
-        if (null != mPreviewReadyCallback)
+        if (mPreviewReadyCallback != null)
         {
             mPreviewReadyCallback.onPreviewReady();
         }
@@ -285,7 +323,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
         }
 
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) getLayoutParams();
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) surfaceView.getLayoutParams();
 
         int layoutHeight = (int) (tmpLayoutHeight * fact);
         int layoutWidth = (int) (tmpLayoutWidth * fact);
@@ -296,11 +334,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
 
         boolean layoutChanged;
-        if ((layoutWidth != this.getWidth()) || (layoutHeight != this.getHeight()))
+        if ((layoutWidth != surfaceView.getWidth()) || (layoutHeight != surfaceView.getHeight()))
         {
             layoutParams.height = layoutHeight;
             layoutParams.width = layoutWidth;
-            this.setLayoutParams(layoutParams); // this will trigger another surfaceChanged invocation.
+            surfaceView.setLayoutParams(layoutParams); // this will trigger another surfaceChanged invocation.
             layoutChanged = true;
         }
         else
@@ -314,7 +352,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     protected void configureCameraParameters(Camera.Parameters cameraParams)
     {
         int angle;
-        Display display = mActivity.getWindowManager().getDefaultDisplay();
+
+        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+
         switch (display.getRotation())
         {
             case Surface.ROTATION_0: // This is display orientation
@@ -333,6 +374,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 angle = 90;
                 break;
         }
+
         Log.v(LOG_TAG, "angle: " + angle);
         mCamera.setDisplayOrientation(angle);
 
@@ -345,12 +387,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
 
         mCamera.setParameters(cameraParams);
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder)
-    {
-        stop();
     }
 
     public void stop()
@@ -385,8 +421,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         return mPreviewSize;
     }
 
-    public void setOnPreviewReady(PreviewReadyCallback cb)
+    public void setOnPreviewReady(PreviewReadyCallback callback)
     {
-        mPreviewReadyCallback = cb;
+        mPreviewReadyCallback = callback;
     }
 }

@@ -13,9 +13,10 @@ import java.util.List;
  */
 public class ResizableCameraPreview extends CameraPreview
 {
-    public ResizableCameraPreview(Activity activity, int cameraId, LayoutMode mode, boolean addReversedSizes)
+    public ResizableCameraPreview(Activity activity, boolean addReversedSizes)
     {
-        super(activity, cameraId, mode);
+        super(activity);
+
         if (addReversedSizes)
         {
             List<Camera.Size> sizes = mPreviewSizeList;

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.mauriciotogneri.camerapreview.CameraPreviewView
+    <com.mauriciotogneri.camerapreview.CameraPreview
         android:id="@+id/camerapreview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
