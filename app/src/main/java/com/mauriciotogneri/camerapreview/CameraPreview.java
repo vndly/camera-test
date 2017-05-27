@@ -184,14 +184,11 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
         }
     }
 
-    private int count = 0;
-
     @Override
     public void onPreviewFrame(byte[] data, Camera camera)
     {
         long start = System.currentTimeMillis();
 
-        Camera.Parameters parameters = camera.getParameters();
         //Camera.Size previewSize = parameters.getPreviewSize();
         //Bitmap bitmap = bitmap(data, previewSize.width, previewSize.height);
 
