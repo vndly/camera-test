@@ -20,11 +20,6 @@ import java.util.List;
 
 public class CameraPreview extends RelativeLayout implements PreviewCallback, SurfaceHolder.Callback
 {
-    private static boolean DEBUGGING = true;
-    private static final String LOG_TAG = "CameraPreviewSample";
-    private static final String CAMERA_PARAM_ORIENTATION = "orientation";
-    private static final String CAMERA_PARAM_LANDSCAPE = "landscape";
-    private static final String CAMERA_PARAM_PORTRAIT = "portrait";
     protected Context mActivity;
     private SurfaceView surfaceView;
     private SurfaceHolder mHolder;
@@ -139,10 +134,6 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
         {
             Camera.Size previewSize = determinePreviewSize(portrait, width, height);
             Camera.Size pictureSize = determinePictureSize(previewSize);
-            if (DEBUGGING)
-            {
-                Log.v(LOG_TAG, "Desired Preview Size - w: " + width + ", h: " + height);
-            }
             mPreviewSize = previewSize;
             mPictureSize = pictureSize;
             mSurfaceConfiguring = adjustSurfaceLayoutSize(previewSize, portrait, width, height);
@@ -167,8 +158,6 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
         }
         catch (Exception e)
         {
-            Log.w(LOG_TAG, "Failed to start preview: " + e.getMessage());
-
             // Remove failed size
             mPreviewSizeList.remove(mPreviewSize);
             mPreviewSize = null;
@@ -181,7 +170,6 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
             else
             {
                 Toast.makeText(mActivity, "Can't start preview", Toast.LENGTH_LONG).show();
-                Log.w(LOG_TAG, "Gave up starting preview");
             }
         }
 
@@ -215,20 +203,6 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
             reqPreviewHeight = reqHeight;
         }
 
-        if (DEBUGGING)
-        {
-            Log.v(LOG_TAG, "Listing all supported preview sizes");
-            for (Camera.Size size : mPreviewSizeList)
-            {
-                Log.v(LOG_TAG, "  w: " + size.width + ", h: " + size.height);
-            }
-            Log.v(LOG_TAG, "Listing all supported picture sizes");
-            for (Camera.Size size : mPictureSizeList)
-            {
-                Log.v(LOG_TAG, "  w: " + size.width + ", h: " + size.height);
-            }
-        }
-
         // Adjust surface size with the closest aspect-ratio
         float reqRatio = ((float) reqPreviewWidth) / reqPreviewHeight;
         float curRatio, deltaRatio;
@@ -257,11 +231,6 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
             {
                 return size;
             }
-        }
-
-        if (DEBUGGING)
-        {
-            Log.v(LOG_TAG, "Same picture size not found.");
         }
 
         // if the preview size is not supported as a picture size
@@ -327,11 +296,6 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
 
         int layoutHeight = (int) (tmpLayoutHeight * fact);
         int layoutWidth = (int) (tmpLayoutWidth * fact);
-        if (DEBUGGING)
-        {
-            Log.v(LOG_TAG, "Preview Layout Size - w: " + layoutWidth + ", h: " + layoutHeight);
-            Log.v(LOG_TAG, "Scale factor: " + fact);
-        }
 
         boolean layoutChanged;
         if ((layoutWidth != surfaceView.getWidth()) || (layoutHeight != surfaceView.getHeight()))
@@ -375,16 +339,10 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
                 break;
         }
 
-        Log.v(LOG_TAG, "angle: " + angle);
         mCamera.setDisplayOrientation(angle);
 
         cameraParams.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
         cameraParams.setPictureSize(mPictureSize.width, mPictureSize.height);
-        if (DEBUGGING)
-        {
-            Log.v(LOG_TAG, "Preview Actual Size - w: " + mPreviewSize.width + ", h: " + mPreviewSize.height);
-            Log.v(LOG_TAG, "Picture Actual Size - w: " + mPictureSize.width + ", h: " + mPictureSize.height);
-        }
 
         mCamera.setParameters(cameraParams);
     }
