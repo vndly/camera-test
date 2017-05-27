@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
 import java.io.IOException;
@@ -18,14 +19,7 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
     private Camera camera;
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
-    private LayoutMode layoutMode;
     private Rect surfaceSize = null;
-
-    public enum LayoutMode
-    {
-        FIT_TO_PARENT, // Scale to the size that no side is larger than the parent
-        NO_BLANK // Scale to the size that no side is smaller than the parent
-    }
 
     public NewCameraPreview(Context context)
     {
@@ -55,8 +49,6 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-
-        layoutMode = LayoutMode.FIT_TO_PARENT;
     }
 
     public void resume() throws IOException
@@ -92,22 +84,26 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
 
     private void initPreview(Camera camera, Rect surfaceSize) throws IOException
     {
-        camera.setPreviewDisplay(surfaceHolder);
-
         Camera.Parameters parameters = camera.getParameters();
-        Camera.Size size = previewSize2(surfaceSize.width(), surfaceSize.height(), parameters);
-        adjustSurfaceLayoutSize(size, surfaceSize.width(), surfaceSize.height());
 
-        if (size != null)
+        Camera.Size previewSize = previewSizeByAspectRatio(surfaceSize.width(), surfaceSize.height(), parameters);
+        boolean layoutSizeChanged = adjustSurfaceLayoutSize(previewSize, surfaceSize.width(), surfaceSize.height());
+
+        if (!layoutSizeChanged)
         {
-            parameters.setPreviewSize(size.width, size.height);
+            if (previewSize != null)
+            {
+                parameters.setPreviewSize(previewSize.width, previewSize.height);
+            }
+
+            camera.setPreviewDisplay(surfaceHolder);
+            camera.setPreviewCallback(this);
             camera.setParameters(parameters);
             camera.startPreview();
-            camera.setPreviewCallback(this);
         }
     }
 
-    private Camera.Size previewSize(int width, int height, Camera.Parameters parameters)
+    /*private Camera.Size previewSizeByMaxSize(int width, int height, Camera.Parameters parameters)
     {
         Camera.Size result = null;
 
@@ -133,10 +129,10 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
         }
 
         return result;
-    }
+    }*/
 
     // adjust surface size with the closest aspect-ratio
-    private Camera.Size previewSize2(int reqWidth, int reqHeight, Camera.Parameters parameters)
+    private Camera.Size previewSizeByAspectRatio(int reqWidth, int reqHeight, Camera.Parameters parameters)
     {
         float reqRatio = ((float) reqWidth) / reqHeight;
         float deltaRatioMin = Float.MAX_VALUE;
@@ -157,59 +153,31 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
         return result;
     }
 
-    private boolean adjustSurfaceLayoutSize(Camera.Size previewSize, int availableWidth, int availableHeight)
+    private boolean adjustSurfaceLayoutSize(Camera.Size previewSize, int surfaceWidth, int surfaceHeight)
     {
         float tmpLayoutHeight = previewSize.height;
         float tmpLayoutWidth = previewSize.width;
 
-        float factH, factW, fact;
-        factH = availableHeight / tmpLayoutHeight;
-        factW = availableWidth / tmpLayoutWidth;
-
-        if (layoutMode == LayoutMode.FIT_TO_PARENT)
-        {
-            // Select smaller factor, because the surface cannot be set to the size larger than display metrics.
-            if (factH < factW)
-            {
-                fact = factH;
-            }
-            else
-            {
-                fact = factW;
-            }
-        }
-        else
-        {
-            if (factH < factW)
-            {
-                fact = factW;
-            }
-            else
-            {
-                fact = factH;
-            }
-        }
-
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) surfaceView.getLayoutParams();
+        float factH = surfaceHeight / tmpLayoutHeight;
+        float factW = surfaceWidth / tmpLayoutWidth;
+        float fact = (factH < factW) ? factH : factW;
 
         int layoutHeight = (int) (tmpLayoutHeight * fact);
         int layoutWidth = (int) (tmpLayoutWidth * fact);
 
-        boolean layoutChanged;
-
-        if ((layoutWidth != surfaceView.getWidth()) || (layoutHeight != surfaceView.getHeight()))
+        if ((layoutWidth != surfaceWidth) || (layoutHeight != surfaceHeight))
         {
+            ViewGroup.LayoutParams layoutParams = surfaceView.getLayoutParams();
             layoutParams.height = layoutHeight;
             layoutParams.width = layoutWidth;
-            surfaceView.setLayoutParams(layoutParams); // this will trigger another surfaceChanged invocation.
-            layoutChanged = true;
+            surfaceView.setLayoutParams(layoutParams); // this will trigger another surfaceChanged call
+
+            return true;
         }
         else
         {
-            layoutChanged = false;
+            return false;
         }
-
-        return layoutChanged;
     }
 
     @Override
