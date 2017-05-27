@@ -1,9 +1,13 @@
 package com.mauriciotogneri.camerapreview;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
+import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -12,6 +16,8 @@ import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class CameraPreview extends RelativeLayout implements PreviewCallback, SurfaceHolder.Callback
@@ -180,21 +186,81 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
         }
     }
 
+    private int count = 0;
+
     @Override
     public void onPreviewFrame(byte[] data, Camera camera)
     {
-        Log.i("TEST", "DATA: " + data.length);
+        long start = System.currentTimeMillis();
 
-        /*try
+        Camera.Parameters parameters = camera.getParameters();
+        Camera.Size previewSize = parameters.getPreviewSize();
+        Bitmap bitmap = bitmap(data, previewSize.width, previewSize.height);
+
+        //Bitmap bitmap = bitmap(data, camera.getParameters());
+
+        Log.i("TEST", "TIME: " + (System.currentTimeMillis() - start));
+
+        try
         {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+
             FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/file.bmp");
-            fos.write(data);
+            fos.write(byteArray);
             fos.close();
+
+            count++;
+
+            if (count > 3)
+            {
+                System.exit(0);
+            }
         }
         catch (Exception e)
         {
             e.printStackTrace();
-        }*/
+        }
+    }
+
+    private Bitmap bitmap(byte[] data, Camera.Parameters parameters)
+    {
+        int width = parameters.getPreviewSize().width;
+        int height = parameters.getPreviewSize().height;
+
+        YuvImage yuv = new YuvImage(data, parameters.getPreviewFormat(), width, height, null);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        yuv.compressToJpeg(new Rect(0, 0, width, height), 100, out);
+
+        byte[] bytes = out.toByteArray();
+
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+    }
+
+    private Bitmap bitmap(byte[] data, int width, int height)
+    {
+        int[] pixels = new int[width * height];
+        int inputOffset = 0;
+
+        for (int y = 0; y < height; y++)
+        {
+            int outputOffset = y * width;
+
+            for (int x = 0; x < width; x++)
+            {
+                int grey = data[inputOffset + x] & 0xff;
+                pixels[outputOffset + x] = 0xFF000000 | (grey * 0x00010101);
+            }
+
+            inputOffset += width;
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+
+        return bitmap;
     }
 
     @Override
