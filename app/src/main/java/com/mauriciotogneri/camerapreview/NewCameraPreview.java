@@ -1,9 +1,11 @@
 package com.mauriciotogneri.camerapreview;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -17,9 +19,7 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
     private LayoutMode layoutMode;
-
-    private int surfaceWidth = -1;
-    private int surfaceHeight = -1;
+    private Rect surfaceSize = null;
 
     public enum LayoutMode
     {
@@ -61,20 +61,14 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
 
     public void resume() throws IOException
     {
-        camera = openCamera(0);
+        stopCamera();
+        camera = Camera.open(0);
         startPreview();
     }
 
     public void pause()
     {
         stopCamera();
-    }
-
-    private Camera openCamera(int id)
-    {
-        stopCamera();
-
-        return Camera.open(id);
     }
 
     private void stopCamera()
@@ -89,9 +83,25 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
 
     private void startPreview() throws IOException
     {
-        if ((camera != null) && (surfaceWidth != -1) && (surfaceHeight != -1))
+        if ((camera != null) && (surfaceSize != null))
         {
-            initPreview(camera, surfaceWidth, surfaceHeight);
+            initPreview(camera, surfaceSize);
+        }
+    }
+
+    private void initPreview(Camera camera, Rect surfaceSize) throws IOException
+    {
+        camera.setPreviewDisplay(surfaceHolder);
+
+        Camera.Parameters parameters = camera.getParameters();
+        Camera.Size size = previewSize(surfaceSize.width(), surfaceSize.height(), parameters);
+
+        if (size != null)
+        {
+            parameters.setPreviewSize(size.width, size.height);
+            requestLayout();
+            camera.setParameters(parameters);
+            camera.startPreview();
         }
     }
 
@@ -123,62 +133,10 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
         return result;
     }
 
-    private void initPreview(Camera camera, int width, int height) throws IOException
-    {
-        if (camera != null)
-        {
-            camera.setPreviewDisplay(surfaceHolder);
-
-            Camera.Parameters parameters = camera.getParameters();
-            Camera.Size size = previewSize(width, height, parameters);
-
-            if (size != null)
-            {
-                parameters.setPreviewSize(size.width, size.height);
-                requestLayout();
-                camera.setParameters(parameters);
-                camera.startPreview();
-            }
-        }
-    }
-
-    //---------------------
-
-    /*public void setCamera(Camera camera)
-    {
-        if (this.camera == camera)
-        {
-            return;
-        }
-
-        stopCamera();
-
-        this.camera = camera;
-
-        if (camera != null)
-        {
-            List<Size> localSizes = camera.getParameters().getSupportedPreviewSizes();
-            mSupportedPreviewSizes = localSizes;
-            requestLayout();
-
-            try
-            {
-                camera.setPreviewDisplay(surfaceHolder);
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-
-            // Important: Call startPreview() to start updating the preview
-            // surface. Preview must be started before you can take a picture.
-            camera.startPreview();
-        }
-    }*/
-
     @Override
     public void onPreviewFrame(byte[] data, Camera camera)
     {
+        Log.i("TEST", "DATA: " + data.length);
     }
 
     @Override
@@ -189,16 +147,15 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
     {
-        surfaceWidth = width;
-        surfaceHeight = height;
+        surfaceSize = new Rect(0, 0, width, height);
 
         try
         {
             startPreview();
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            e.printStackTrace();
+            stopCamera();
         }
     }
 
@@ -206,8 +163,6 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
     public void surfaceDestroyed(SurfaceHolder holder)
     {
         stopCamera();
-
-        surfaceWidth = -1;
-        surfaceHeight = -1;
+        surfaceSize = null;
     }
 }
