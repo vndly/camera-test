@@ -9,7 +9,7 @@ android
     {
         applicationId 'com.mauriciotogneri.cameratest'
         minSdkVersion 18
-        targetSdkVersion 25
+        targetSdkVersion 22
         versionCode 1
         versionName '1.0.0'
     }
@@ -41,5 +41,4 @@ android
 
 dependencies
 {
-    compile 'com.android.support:appcompat-v7:25.3.1'
 }
