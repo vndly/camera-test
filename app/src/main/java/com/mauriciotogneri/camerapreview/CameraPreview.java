@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
-import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -13,7 +12,6 @@ import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class CameraPreview extends RelativeLayout implements PreviewCallback, SurfaceHolder.Callback
@@ -187,7 +185,7 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
     {
         Log.i("TEST", "DATA: " + data.length);
 
-        try
+        /*try
         {
             FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/file.bmp");
             fos.write(data);
@@ -196,7 +194,7 @@ public class CameraPreview extends RelativeLayout implements PreviewCallback, Su
         catch (Exception e)
         {
             e.printStackTrace();
-        }
+        }*/
     }
 
     @Override
