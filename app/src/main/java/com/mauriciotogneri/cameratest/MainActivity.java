@@ -3,14 +3,14 @@ package com.mauriciotogneri.cameratest;
 import android.app.Activity;
 import android.os.Bundle;
 
-import com.mauriciotogneri.camerapreview.NewCameraPreview;
+import com.mauriciotogneri.camerapreview.CameraPreview;
 
 import java.io.IOException;
 
 // https://github.com/pikanji/CameraPreviewSample
 public class MainActivity extends Activity
 {
-    private NewCameraPreview preview;
+    private CameraPreview preview;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -19,7 +19,7 @@ public class MainActivity extends Activity
 
         setContentView(R.layout.activity_main);
 
-        preview = (NewCameraPreview) findViewById(R.id.camerapreview);
+        preview = (CameraPreview) findViewById(R.id.camerapreview);
     }
 
     @Override

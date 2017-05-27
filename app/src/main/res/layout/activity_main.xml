@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.mauriciotogneri.camerapreview.NewCameraPreview
+    <com.mauriciotogneri.camerapreview.CameraPreview
         android:id="@+id/camerapreview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
