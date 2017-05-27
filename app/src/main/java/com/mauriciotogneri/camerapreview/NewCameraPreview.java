@@ -84,21 +84,21 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
 
     private void initPreview(Camera camera, Rect surfaceSize) throws IOException
     {
-        Camera.Parameters parameters = camera.getParameters();
+        Camera.Parameters cameraParameters = camera.getParameters();
 
-        Camera.Size previewSize = previewSizeByAspectRatio(surfaceSize.width(), surfaceSize.height(), parameters);
+        Camera.Size previewSize = previewSizeByAspectRatio(cameraParameters, surfaceSize.width(), surfaceSize.height());
         boolean layoutSizeChanged = adjustSurfaceLayoutSize(previewSize, surfaceSize.width(), surfaceSize.height());
 
         if (!layoutSizeChanged)
         {
             if (previewSize != null)
             {
-                parameters.setPreviewSize(previewSize.width, previewSize.height);
+                cameraParameters.setPreviewSize(previewSize.width, previewSize.height);
             }
 
             camera.setPreviewDisplay(surfaceHolder);
             camera.setPreviewCallback(this);
-            camera.setParameters(parameters);
+            camera.setParameters(cameraParameters);
             camera.startPreview();
         }
     }
@@ -132,7 +132,7 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
     }*/
 
     // adjust surface size with the closest aspect-ratio
-    private Camera.Size previewSizeByAspectRatio(int reqWidth, int reqHeight, Camera.Parameters parameters)
+    private Camera.Size previewSizeByAspectRatio(Camera.Parameters parameters, int reqWidth, int reqHeight)
     {
         float reqRatio = ((float) reqWidth) / reqHeight;
         float deltaRatioMin = Float.MAX_VALUE;
