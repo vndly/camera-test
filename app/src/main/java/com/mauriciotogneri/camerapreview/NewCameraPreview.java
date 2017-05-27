@@ -75,6 +75,7 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
     {
         if (camera != null)
         {
+            camera.setPreviewCallback(null);
             camera.stopPreview();
             camera.release();
             camera = null;
@@ -99,9 +100,9 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
         if (size != null)
         {
             parameters.setPreviewSize(size.width, size.height);
-            requestLayout();
             camera.setParameters(parameters);
             camera.startPreview();
+            camera.setPreviewCallback(this);
         }
     }
 
@@ -109,9 +110,13 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
     {
         Camera.Size result = null;
 
+        Log.i("SIZE1", width + " - " + height);
+
         for (Camera.Size size : parameters.getSupportedPreviewSizes())
         {
-            if (size.width <= width && size.height <= height)
+            Log.i("SIZE2", size.width + " - " + size.height);
+
+            if ((size.width <= width) && (size.height <= height))
             {
                 if (result == null)
                 {
@@ -137,6 +142,17 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
     public void onPreviewFrame(byte[] data, Camera camera)
     {
         Log.i("TEST", "DATA: " + data.length);
+
+        /*try
+        {
+            FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/file.bmp");
+            fos.write(data);
+            fos.close();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }*/
     }
 
     @Override
