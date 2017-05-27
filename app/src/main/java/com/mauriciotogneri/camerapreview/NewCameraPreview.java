@@ -96,6 +96,7 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
 
         Camera.Parameters parameters = camera.getParameters();
         Camera.Size size = previewSize(surfaceSize.width(), surfaceSize.height(), parameters);
+        adjustSurfaceLayoutSize(size, surfaceSize.width(), surfaceSize.height());
 
         if (size != null)
         {
@@ -136,6 +137,83 @@ public class NewCameraPreview extends RelativeLayout implements PreviewCallback,
         }
 
         return result;
+    }
+
+    private Camera.Size previewSize2(int reqWidth, int reqHeight, Camera.Parameters parameters)
+    {
+        // adjust surface size with the closest aspect-ratio
+        float reqRatio = ((float) reqWidth) / reqHeight;
+        float deltaRatioMin = Float.MAX_VALUE;
+        Camera.Size result = null;
+
+        for (Camera.Size size : parameters.getSupportedPreviewSizes())
+        {
+            float curRatio = ((float) size.width) / size.height;
+            float deltaRatio = Math.abs(reqRatio - curRatio);
+
+            if (deltaRatio < deltaRatioMin)
+            {
+                deltaRatioMin = deltaRatio;
+                result = size;
+            }
+        }
+
+        return result;
+    }
+
+    private boolean adjustSurfaceLayoutSize(Camera.Size previewSize, int availableWidth, int availableHeight)
+    {
+        float tmpLayoutHeight = previewSize.height;
+        float tmpLayoutWidth = previewSize.width;
+
+        float factH, factW, fact;
+        factH = availableHeight / tmpLayoutHeight;
+        factW = availableWidth / tmpLayoutWidth;
+
+        if (layoutMode == LayoutMode.FIT_TO_PARENT)
+        {
+            // Select smaller factor, because the surface cannot be set to the size larger than display metrics.
+            if (factH < factW)
+            {
+                fact = factH;
+            }
+            else
+            {
+                fact = factW;
+            }
+        }
+        else
+        {
+            if (factH < factW)
+            {
+                fact = factW;
+            }
+            else
+            {
+                fact = factH;
+            }
+        }
+
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) surfaceView.getLayoutParams();
+
+        int layoutHeight = (int) (tmpLayoutHeight * fact);
+        int layoutWidth = (int) (tmpLayoutWidth * fact);
+
+        boolean layoutChanged;
+
+        if ((layoutWidth != surfaceView.getWidth()) || (layoutHeight != surfaceView.getHeight()))
+        {
+            layoutParams.height = layoutHeight;
+            layoutParams.width = layoutWidth;
+            surfaceView.setLayoutParams(layoutParams); // this will trigger another surfaceChanged invocation.
+            layoutChanged = true;
+        }
+        else
+        {
+            layoutChanged = false;
+        }
+
+        return layoutChanged;
     }
 
     @Override

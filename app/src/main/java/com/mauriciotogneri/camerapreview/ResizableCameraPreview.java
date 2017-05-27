@@ -36,7 +36,7 @@ public class ResizableCameraPreview extends CameraPreview
         mCamera.stopPreview();
 
         Camera.Parameters cameraParams = mCamera.getParameters();
-        boolean portrait = isPortrait();
+        /*boolean portrait = isPortrait();
 
         if (!mSurfaceConfiguring)
         {
@@ -50,7 +50,7 @@ public class ResizableCameraPreview extends CameraPreview
             {
                 return;
             }
-        }
+        }*/
 
         configureCameraParameters(cameraParams);
         mSurfaceConfiguring = false;
@@ -72,7 +72,7 @@ public class ResizableCameraPreview extends CameraPreview
      */
     public void setPreviewSize(int index, int width, int height)
     {
-        mCamera.stopPreview();
+        /*mCamera.stopPreview();
 
         Camera.Parameters cameraParams = mCamera.getParameters();
         boolean portrait = isPortrait();
@@ -98,7 +98,7 @@ public class ResizableCameraPreview extends CameraPreview
         {
             Toast.makeText(mActivity, "Failed to satart preview: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
-        mSurfaceConfiguring = false;
+        mSurfaceConfiguring = false;*/
     }
 
     public List<Camera.Size> getSupportedPreivewSizes()
