@@ -1,2 +1,1 @@
-# camera-test
-Camera Preview Test
+# Camera Preview Test
