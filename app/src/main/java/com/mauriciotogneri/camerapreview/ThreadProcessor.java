@@ -13,7 +13,6 @@ import java.io.FileOutputStream;
 public class ThreadProcessor extends Thread
 {
     private boolean running = true;
-    private boolean processing = false;
     private final Object lock = new Object();
 
     private byte[] inputData = null;
@@ -31,7 +30,7 @@ public class ThreadProcessor extends Thread
         {
             synchronized (lock)
             {
-                if (!processing)
+                if (getState() == State.WAITING)
                 {
                     inputData = data;
                     inputWidth = width;
@@ -59,15 +58,14 @@ public class ThreadProcessor extends Thread
     {
         while (running)
         {
-            boolean doWork = false;
+            boolean process = false;
 
             synchronized (lock)
             {
                 try
                 {
                     lock.wait();
-                    processing = true;
-                    doWork = true;
+                    process = true;
                 }
                 catch (Exception e)
                 {
@@ -75,7 +73,7 @@ public class ThreadProcessor extends Thread
                 }
             }
 
-            if (doWork && running)
+            if (process && running)
             {
                 if ((inputData != null) && (inputWidth != -1) && (inputHeight != -1))
                 {
@@ -86,11 +84,6 @@ public class ThreadProcessor extends Thread
                 inputWidth = -1;
                 inputHeight = -1;
                 inputFormat = -1;
-
-                synchronized (lock)
-                {
-                    processing = false;
-                }
             }
         }
     }
